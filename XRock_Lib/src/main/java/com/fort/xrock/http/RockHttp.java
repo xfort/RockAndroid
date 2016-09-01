@@ -29,13 +29,18 @@ import okhttp3.Response;
 
 /**
  * Created by Mac on 16/8/29.
+ * 对OkHttp的封装
  */
 public class RockHttp {
     final String TAG = "RockHttp";
     OkHttpClient okHttpClient;
     ThreadPoolExecutor threadPoolExecutor;
 
-
+    /**
+     * 初始化
+     *
+     * @param threadPoolExecutor
+     */
     private void initOkHttp(ThreadPoolExecutor threadPoolExecutor) {
         this.threadPoolExecutor = threadPoolExecutor;
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -81,12 +86,10 @@ public class RockHttp {
                 return true;
             }
         });
-
     }
 
     public void doRequest(RockRequest request) {
         doRequest(request.url, request.formMap, request.multiMap, request.headMap, request.callback, request.httpTag);
-
     }
 
     public void doRequest(String url, Map<String, String> body, RockUICallback callback, Object tag) {

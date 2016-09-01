@@ -15,3 +15,12 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+
+-keepnames com.fort.xrock.image.XSGlideModule
+-keepresourcexmlelements manifest/application/meta-data@value=GlideModule
+-keep public class * implements com.bumptech.glide.module.GlideModule
+
+-keep class com.bumptech.glide.**{*;}
+
+-keep class okhttp.**{*;}

@@ -6,6 +6,9 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         >
+        <meta-data
+            android:name="com.fort.xrock.image.RockGlideModule"
+            android:value="GlideModule"/>
 
     </application>
 
