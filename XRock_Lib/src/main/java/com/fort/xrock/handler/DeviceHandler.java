@@ -15,11 +15,19 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.WindowManager;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 /**
  * Created by Mac on 16/9/1.
  * 设备数据
  */
 public class DeviceHandler {
+    final String TAG = "DeviceHandler";
     Context appContext;
     int screenWidth, screenHeight, windowWidth, windowHeigh;
 
@@ -155,5 +163,34 @@ public class DeviceHandler {
             androidID = null;
         }
         return androidID;
+    }
+
+    public String getCPUInfo() {
+        String cpuInfp = null;
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            cpuInfp = Build.SUPPORTED_ABIS;
+//        }
+//        if (cpuInfp == null || cpuInfp.length <= 0) {
+        try {
+            InputStream fileInputStream = new FileInputStream("/proc/cpuinfo");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                String[] params = line.split("\\:");
+                if (params.length >= 2) {
+                    String key = params[0];
+                    if (key.trim().equals("Processor")) {
+                        cpuInfp = params[1].trim();
+                        break;
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        }
+        return cpuInfp;
     }
 }

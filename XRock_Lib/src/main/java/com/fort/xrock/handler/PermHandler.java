@@ -33,16 +33,32 @@ public class PermHandler {
      */
     public boolean hasPerm(String perm) {
         int res = ContextCompat.checkSelfPermission(context, perm);
-        if (res != PackageManager.PERMISSION_DENIED) {//有权限
+        if (res == PackageManager.PERMISSION_GRANTED) {//有权限
             return true;
         }
         return false;
     }
 
     /**
+     * 是否拥有所有权限
+     *
+     * @param permArray
+     * @return true代表有所有权限
+     */
+    public boolean hasAllPerm(String[] permArray) {
+        for (String item : permArray) {
+            int res = ContextCompat.checkSelfPermission(context, item);
+            if (res == PackageManager.PERMISSION_DENIED) {//有权限
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * 申请权限，会先检查是否拥有，只申请未拥有的权限
      *
-     * @param requestCode
+     * @param requestCode      请求码，方便回调结果识别
      * @param permArray        权限数组
      * @param callbackListener msg.arg1=0代表获取所有权限成功，1代表获取失败
      */
@@ -68,6 +84,13 @@ public class PermHandler {
         }
     }
 
+    /**
+     * 结果解析
+     *
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[]
             grantResults) {
         Message msg = Message.obtain();
