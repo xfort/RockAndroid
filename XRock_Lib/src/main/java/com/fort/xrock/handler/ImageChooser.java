@@ -6,11 +6,12 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import com.fort.xrock.bean.ImageMessage;
-import com.fort.xrock.listener.XCallBack;
+import com.fort.xrock.util.RockUtil;
 
 import java.io.File;
 import java.net.URI;
@@ -21,21 +22,21 @@ import java.net.URI;
  */
 public class ImageChooser {
 
-    public static final int Result_Error = 121;
+    public static final int Result_Error = 1111;
     final String TAG = "ImageChooser";
-    public static final int ImageChooser = 122;
-    public static final int Request_Camera = 123;
-    public static final int Request_Gallery = 124;
-    public static final int Request_Crop = 125;
 
-    XCallBack<ImageMessage> callbackListener;
+    public static final int Request_Camera = 1113;
+    public static final int Request_Gallery = 1114;
+    public static final int Request_Crop = 1115;
+
+    //    XCallBack<ImageMessage> callbackListener;
     Activity activity;
     int imageWidth, imageHeight;
     boolean needCrop = true;
 
-    public ImageChooser with(Activity activity, XCallBack<ImageMessage> callbackListener) {
+    public ImageChooser with(Activity activity) {
         this.activity = activity;
-        this.callbackListener = callbackListener;
+//        this.callbackListener = callbackListener;
         return this;
     }
 
@@ -64,9 +65,26 @@ public class ImageChooser {
     }
 
     /**
+     * 启动相机拍照
+     *
+     * @param requestCode
+     * @param bd
+     */
+    public boolean startCamera(int requestCode, Bundle bd) {
+        if (RockUtil.hasExternal()) {
+            File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            File picFile = new File(dir, System.currentTimeMillis() + ".png");
+            return startCamera(requestCode, Uri.fromFile(picFile), bd);
+        } else {
+            Log.e(TAG, "startCamera() 外部存储无法使用");
+        }
+        return false;
+    }
+
+    /**
      * 启动相机
      */
-    public void startCamera(int requestCode, Uri imageFileUri, Bundle bd) {
+    public boolean startCamera(int requestCode, Uri imageFileUri, Bundle bd) {
         Intent intentCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intentCamera.putExtra(MediaStore.EXTRA_OUTPUT, imageFileUri);
         intentCamera.putExtra("return-data", false);
@@ -76,10 +94,9 @@ public class ImageChooser {
         }
         if (intentCamera.resolveActivity(activity.getPackageManager()) != null) {
             activity.startActivityForResult(intentCamera, requestCode);
-        } else {
-            onResult(null, requestCode, Result_Error);
-            Log.e(TAG, "startCamera_NOT found Activity");
+            return true;
         }
+        return false;
     }
 
     /**
@@ -87,7 +104,7 @@ public class ImageChooser {
      *
      * @param requestCode
      */
-    public void startGallery(int requestCode, Bundle bd) {
+    public boolean startGallery(int requestCode, Bundle bd) {
         Intent fileIntent = null;
         if (Build.VERSION.SDK_INT < 19) {
             fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -104,9 +121,9 @@ public class ImageChooser {
 
         if (fileIntent.resolveActivity(activity.getPackageManager()) != null) {
             activity.startActivityForResult(fileIntent, requestCode);
-        } else {
-            onResult(null, requestCode, Result_Error);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -119,7 +136,7 @@ public class ImageChooser {
      * @param outHeight
      * @param bd          其它参数
      */
-    public void cropImage(int requestCode, Uri picFileUri, Uri resultUri, int outWidth, int outHeight, Bundle bd) {
+    public boolean cropImage(int requestCode, Uri picFileUri, Uri resultUri, int outWidth, int outHeight, Bundle bd) {
         Intent intent = new Intent("com.android.camera.action.CROP");
         intent.setDataAndType(picFileUri, "image/*");
         intent.putExtra("crop", "true");
@@ -142,26 +159,46 @@ public class ImageChooser {
 
         if (intent.resolveActivity(activity.getPackageManager()) != null) {
             activity.startActivityForResult(intent, requestCode);
+            return true;
         } else {
-            onResult(picFileUri, requestCode, Result_Error);
+            Log.w(TAG, "cropImage() fail");
+//            onResult(picFileUri, requestCode, Result_Error);
         }
+        return false;
     }
 
-    public void cropImage(int requestCode, Uri picFileUri, int outWidth, int outHeight, Bundle bd) {
+    public boolean cropImage(int requestCode, Uri picFileUri, int outWidth, int outHeight, Bundle bd) {
         File file = new File(URI.create(picFileUri.toString()));
         File outFile = new File(file.getParentFile(), file.getName() + "_" + System.currentTimeMillis() + ".png");
-        cropImage(requestCode, picFileUri, Uri.fromFile(outFile), outWidth, outHeight, bd);
+        return cropImage(requestCode, picFileUri, Uri.fromFile(outFile), outWidth, outHeight, bd);
     }
 
-
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    /**
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     * @return ImageMessage.requestCode小于0代表未完成所有操作
+     */
+    public ImageMessage onActivityResult(int requestCode, int resultCode, Intent data) {
+        Uri fileUri = null;
+        ImageMessage imageMessage = new ImageMessage();
+        imageMessage.requestCode = requestCode;
+        imageMessage.resultCode = resultCode;
         if (requestCode == Request_Camera) {
-            parseCameraResult(requestCode, resultCode, data);
+            fileUri = parseCameraResult(requestCode, resultCode, data);
+            if (needCrop && fileUri != null && cropImage(Request_Crop, fileUri, imageWidth, imageHeight, null)) {
+                imageMessage.requestCode = -1;
+            }
         } else if (requestCode == Request_Crop) {
-            parseCropResult(requestCode, resultCode, data);
+            fileUri = parseCropResult(requestCode, resultCode, data);
         } else if (requestCode == Request_Gallery) {
-            parseGalleryResult(requestCode, resultCode, data);
+            fileUri = parseGalleryResult(requestCode, resultCode, data);
+            if (needCrop && fileUri != null && cropImage(Request_Crop, fileUri, imageWidth, imageHeight, null)) {
+                imageMessage.requestCode = -1;
+            }
         }
+        imageMessage.imageUri = fileUri;
+        return imageMessage;
     }
 
     /**
@@ -169,24 +206,17 @@ public class ImageChooser {
      *
      * @param data
      */
-    public void parseCameraResult(int requestCode, int resultCode, Intent data) {
+    public Uri parseCameraResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
             Uri fileUri = data.getParcelableExtra(MediaStore.EXTRA_OUTPUT);
             if (fileUri != null) {
-                if (needCrop) {
-                    cropImage(Request_Crop, fileUri, imageWidth, imageHeight, null);
-                    return;
-                } else {
-                    File imageFileTmp = new File(URI.create(fileUri.toString()));
-                    if (imageFileTmp.exists() && imageFileTmp.isFile()) {
-                        onResult(fileUri, requestCode, resultCode);
-                        return;
-                    }
+                File imageFileTmp = new File(URI.create(fileUri.toString()));
+                if (imageFileTmp.exists() && imageFileTmp.isFile()) {
+                    return fileUri;
                 }
             }
-            resultCode = Result_Error;
         }
-        onResult(null, requestCode, resultCode);
+        return null;
     }
 
     /**
@@ -196,7 +226,7 @@ public class ImageChooser {
      * @param resultCode
      * @param data
      */
-    public void parseCropResult(int requestCode, int resultCode, Intent data) {
+    public Uri parseCropResult(int requestCode, int resultCode, Intent data) {
         Uri sourceUri = null, outUri;
         if (data != null) {
             sourceUri = data.getParcelableExtra("sourcetUri");
@@ -208,14 +238,12 @@ public class ImageChooser {
                 if (outUri != null) {
                     File imageFileTmp = new File(URI.create(outUri.toString()));
                     if (imageFileTmp.exists() && imageFileTmp.isFile()) {
-                        onResult(outUri, requestCode, resultCode);
-                        return;
+                        return outUri;
                     }
                 }
-                resultCode = Result_Error;
             }
         }
-        onResult(sourceUri, requestCode, resultCode);
+        return sourceUri;
     }
 
     /**
@@ -225,10 +253,11 @@ public class ImageChooser {
      * @param resultCode
      * @param data
      */
-    public void parseGalleryResult(int requestCode, int resultCode, Intent data) {
+    public Uri parseGalleryResult(int requestCode, int resultCode, Intent data) {
         Uri fileUri = null;
-        Uri uriData = data.getData();
         if (resultCode == Activity.RESULT_OK) {
+            Uri uriData = data.getData();
+
             Cursor cursor = activity.getContentResolver().query(uriData, null, null, null, null);
             if (cursor != null) {
                 cursor.moveToFirst();
@@ -250,16 +279,9 @@ public class ImageChooser {
                 resultCode = Result_Error;
             }
         }
-        onResult(fileUri, requestCode, resultCode);
+        return fileUri;
+//        onResult(fileUri, requestCode, resultCode);
     }
 
-    private void onResult(Uri resFileUri, int requestCode, int resultCode) {
-        if (callbackListener != null) {
-            ImageMessage message = new ImageMessage();
-            message.requestCode = requestCode;
-            message.resultCode = resultCode;
-            message.imageUri = resFileUri;
-            callbackListener.callback(message);
-        }
-    }
+
 }
