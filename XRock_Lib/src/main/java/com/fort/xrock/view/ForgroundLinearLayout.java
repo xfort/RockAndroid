@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
  * 有Forground效果的View
  */
 public class ForgroundLinearLayout extends LinearLayout {
+
     Drawable mForegroundSelector;
 
     public ForgroundLinearLayout(Context context) {

@@ -18,6 +18,5 @@ public class BaseWebClient extends WebViewClient {
             Log.d("BaseWebClient", "onReceivedSslError_" + error.getUrl() + "\n" + error.toString());
         }
         handler.proceed();
-
     }
 }

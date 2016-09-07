@@ -190,7 +190,6 @@ public class DeviceHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        }
         return cpuInfp;
     }
 }

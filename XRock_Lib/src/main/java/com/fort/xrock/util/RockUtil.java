@@ -13,7 +13,7 @@ import java.io.File;
  * Created by Mac on 16/8/29.
  */
 public class RockUtil {
-
+//
 
     public static Object getMetaData(Context context, String key) {
         try {
@@ -79,5 +79,4 @@ public class RockUtil {
         }
         return false;
     }
-
 }
