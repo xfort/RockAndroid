@@ -1,6 +1,7 @@
 package com.xfort.xrock.rockhttp;
 
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -34,7 +35,7 @@ public class RockHttp {
 
     private OkHttpClient initOkhttp() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.connectTimeout(20, TimeUnit.SECONDS);
+        builder.connectTimeout(10, TimeUnit.SECONDS);
         builder.writeTimeout(30, TimeUnit.SECONDS);
         builder.readTimeout(30, TimeUnit.SECONDS);
         if (debug) {
@@ -49,22 +50,13 @@ public class RockHttp {
         List<Call> running = okHttpClient.dispatcher().runningCalls();
         List<Call> queued = okHttpClient.dispatcher().queuedCalls();
         okHttpClient.dispatcher().executorService().execute(new HttpCancelTask(running, queued, tag));
-
     }
 
-    public void get(String url,Object tag,String cacheKey) {
+    public <Result,obj> void get(String url,Object tag,String cacheKey,UICallback<Result,obj>
+            uicallback ) {
         Request.Builder builder=new Request.Builder();
         builder.url(url).tag(tag);
-        okHttpClient.newCall(builder.build()).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
 
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-
-            }
-        });
+        okHttpClient.newCall(builder.build()).enqueue(uicallback);
     }
 }

@@ -10,7 +10,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
-/**
+/**285  139 802
  * Created by xubuntu on 18-3-21.
  */
 
@@ -20,12 +20,14 @@ public abstract class UICallback<Result, Object> implements Callback, HttpCallba
     WeakReference<Handler> handler;
     public WeakReference<Object> weakObj;
 
-    public void handler(Handler handler) {
+    public UICallback handler(Handler handler) {
         this.handler = new WeakReference<Handler>(handler);
+        return this;
     }
 
-    public void attachObj(Object obj) {
+    public UICallback attachObj(Object obj) {
         weakObj = new WeakReference<Object>(obj);
+        return this;
     }
 
     @Override
@@ -74,7 +76,6 @@ public abstract class UICallback<Result, Object> implements Callback, HttpCallba
                 postUI(resObj, errmsg);
             }
         }
-
     }
 
     public void destroy() {
@@ -100,7 +101,7 @@ public abstract class UICallback<Result, Object> implements Callback, HttpCallba
 
     }
 
-     class UIRun<T, Obj> implements Runnable {
+    class UIRun<T, Obj> implements Runnable {
         WeakReference<UICallback<T, Obj>> weakUIcallback;
         T resultObj;
         String errmsg;

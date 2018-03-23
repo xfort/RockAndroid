@@ -29,8 +29,8 @@ public class HttpCancelTask implements Runnable {
         if (running != null) {
             cancelCall(running.get(), tag);
         }
-        if(queued!=null){
-            cancelCall(queued.get(),tag);
+        if (queued != null) {
+            cancelCall(queued.get(), tag);
         }
     }
 

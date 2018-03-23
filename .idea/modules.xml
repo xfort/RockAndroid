@@ -5,9 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/RockAndroid.iml" filepath="$PROJECT_DIR$/RockAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/XRockAndroid.iml" filepath="$PROJECT_DIR$/XRockAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/image/image.iml" filepath="$PROJECT_DIR$/image/image.iml" />
-      <module fileurl="file://$PROJECT_DIR$/rockhttp/rockhttp.iml" filepath="$PROJECT_DIR$/rockhttp/rockhttp.iml" />
       <module fileurl="file://$PROJECT_DIR$/rockhttp/rockhttp.iml" filepath="$PROJECT_DIR$/rockhttp/rockhttp.iml" />
     </modules>
   </component>
