@@ -1,1 +1,1 @@
-include ':app', ':rockhttp'
+include ':app', ':rockhttp', ':image'
