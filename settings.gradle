@@ -1,1 +1,3 @@
-include ':app', ':rocklibrary'
+rootProject.name='RockAndroid'
+include ':app'
+include ':xrock'
