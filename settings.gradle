@@ -1,3 +1,2 @@
-rootProject.name='RockAndroid'
 include ':app'
-include ':xrock'
+rootProject.name = "RockAndroid"
